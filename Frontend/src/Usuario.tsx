@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Usuario.css";
+import SearchBar from "./SearchBar"; // importa el componente
 
 function Usuario() {
   const [genres, setGenres] = useState<string[]>([]);
@@ -34,6 +35,12 @@ function Usuario() {
           </li>
         ))}
       </ul>
+
+      {/* Aquí renderizamos el componente SearchBar */}
+      <div className="usuario_search">
+        <h3>Busca juegos</h3>
+        <SearchBar />
+      </div>
     </div>
   );
 }

@@ -27,6 +27,13 @@ export async function initDB() { //CREATE EXTENSION IF NOT EXISTS "pgcrypto"; es
       genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
       PRIMARY KEY (game_id, genre_id)
     );
+
+    CREATE TABLE IF NOT EXISTS user_saved_games (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    game_id UUID REFERENCES games(id) ON DELETE CASCADE,
+    saved_at TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY (user_id, game_id)
+    );
   `);
 
   console.log("Tablas creadas o ya existentes");

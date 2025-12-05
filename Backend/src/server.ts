@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import pool from "./db";
 import fetch from "node-fetch";
+import cron from "node-cron";
 
 import { initDB } from "./initDB"; // importa tu función
 
@@ -18,7 +19,6 @@ app.use(express.json());
   });
 })();
 
-
 // ----------------------
 // Tipado de la respuesta para GG deals
 // ----------------------
@@ -34,12 +34,79 @@ interface GamePrices {
   };
 }
 
+interface GameData {
+  title: string;
+  url: string;
+  prices: GamePrices;
+}
+
 interface GGDealsResponse {
   success: boolean;
   data: {
     [id: string]: GamePrices | null;
   };
 }
+
+// ----------------------
+// Cron job: cada 12 horas consulta GG.deals
+// ----------------------
+cron.schedule("0 */12 * * *", async () => {
+  console.log("⏰ Ejecutando cron para actualizar precios...");
+
+  try {
+    const ids = "292030,1091500,400"; // Witcher 3, Cyberpunk, L4D2
+    const response = await fetch(
+      `https://api.gg.deals/v1/prices/by-steam-app-id/?ids=${ids}&key=${GGDEALS_API_KEY}&region=us`
+    );
+
+    const data = await response.json() as GGDealsResponse;
+
+    if (data.success) {
+      for (const [steamAppId, game] of Object.entries(data.data)) {
+        if (!game) continue;
+
+        const { title, prices } = game;
+
+        await pool.query(
+          `INSERT INTO prices (steam_app_id, game_title, current_retail, current_keyshops, historical_retail, historical_keyshops, currency)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [
+            steamAppId,
+            title,
+            prices.currentRetail,
+            prices.currentKeyshops,
+            prices.historicalRetail,
+            prices.historicalKeyshops,
+            prices.currency,
+          ]
+        );
+      }
+      console.log("✅ Precios actualizados en BD");
+    }
+  } catch (err) {
+    console.error("❌ Error en cron GG.deals:", err);
+  }
+});
+
+// ----------------------
+// Endpoint: últimos 100 juegos en oferta
+// ----------------------
+app.get("/api/offers", async (_req, res) => {
+  const result = await pool.query(
+    `SELECT game_title, current_retail, current_keyshops, currency, created_at
+     FROM prices
+     WHERE current_retail IS NOT NULL OR current_keyshops IS NOT NULL
+     ORDER BY created_at DESC
+     LIMIT 100`
+  );
+  res.json(result.rows);
+});
+
+// ----------------------
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en puerto ${PORT}`);
+});
+
 
 // ----------------------
 // Endpoints: Usuarios
