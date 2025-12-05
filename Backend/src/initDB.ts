@@ -1,9 +1,7 @@
 import pool from "./db";
 
-export async function initDB() {
+export async function initDB() { //CREATE EXTENSION IF NOT EXISTS "pgcrypto"; esta madre al parecer render le hace fuchi
   await pool.query(`
-    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
     CREATE TABLE IF NOT EXISTS users (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email TEXT UNIQUE NOT NULL,
@@ -31,7 +29,7 @@ export async function initDB() {
     );
   `);
 
-  console.log("✅ Tablas creadas o ya existentes");
+  console.log("Tablas creadas o ya existentes");
 }
 
 initDB()

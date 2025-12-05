@@ -179,6 +179,28 @@ app.get("/api/games", async (req, res) => {
 });
 
 // ----------------------
+// Buscar juegos por título
+// ----------------------
+// Para busqueda en tiempo real con feedback
+app.get("/api/search", async (req, res) => {
+  const q = req.query.q as string;
+  if (!q) {
+    return res.json([]);
+  }
+
+  const result = await pool.query(
+    `SELECT id, title 
+     FROM games 
+     WHERE title ILIKE $1 
+     ORDER BY title ASC 
+     LIMIT 10`,
+    [`%${q}%`]
+  );
+
+  res.json(result.rows);
+});
+
+// ----------------------
 // Endpoint de prueba
 // ----------------------
 app.get("/", (_req, res) => {
