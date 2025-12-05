@@ -1,6 +1,6 @@
 import pool from "./db";
 
-async function initDb() {
+export async function initDB() {
   await pool.query(`
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -34,9 +34,9 @@ async function initDb() {
   console.log("✅ Tablas creadas o ya existentes");
 }
 
-initDb()
+initDB()
   .then(() => process.exit(0))
   .catch((err) => {
-    console.error("❌ Error inicializando BD:", err);
+    console.error("Error inicializando BD:", err);
     process.exit(1);
   });

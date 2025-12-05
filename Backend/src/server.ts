@@ -3,14 +3,24 @@ import bcrypt from "bcrypt";
 import pool from "./db";
 import fetch from "node-fetch";
 
+import { initDB } from "./initDB"; // importa tu función
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GGDEALS_API_KEY = process.env.GGDEALS_API_KEY;
 
 app.use(express.json());
 
+(async () => {
+  await initDB(); // ejecuta el script de la BD primero
+  app.listen(PORT, () => {
+    console.log(`Servidor escuchando en puerto ${PORT}`);
+  });
+})();
+
+
 // ----------------------
-// Tipado de la respuesta
+// Tipado de la respuesta para GG deals
 // ----------------------
 interface GamePrices {
   title: string;
@@ -32,22 +42,91 @@ interface GGDealsResponse {
 }
 
 // ----------------------
-// Endpoint: registrar usuario
+// Endpoints: Usuarios
 // ----------------------
-app.post("/api/users/register", async (req, res) => {
-  const { email, username, password } = req.body;
-  try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    await pool.query(
-      "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)",
-      [email, username, passwordHash]
-    );
-    res.status(201).json({ message: "Usuario registrado" });
-  } catch (err) {
-    res.status(400).json({ error: "Error al registrar usuario" });
-  }
+// Crear usuario
+app.post("/api/users", async (req, res) => {
+  const { email, username, password_hash } = req.body;
+  const result = await pool.query(
+    "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *",
+    [email, username, password_hash]
+  );
+  res.json(result.rows[0]);
 });
 
+// Listar usuarios
+app.get("/api/users", async (req, res) => {
+  const result = await pool.query("SELECT * FROM users");
+  res.json(result.rows);
+});
+
+// ----------------------
+// Endpoints: Juegos
+// ----------------------
+// Crear juego
+app.post("/api/games", async (req, res) => {
+  const { title, on_sale } = req.body;
+  const result = await pool.query(
+    "INSERT INTO games (title, on_sale) VALUES ($1, $2) RETURNING *",
+    [title, on_sale]
+  );
+  res.json(result.rows[0]);
+});
+
+// Listar juegos
+app.get("/api/games", async (req, res) => {
+  const result = await pool.query("SELECT * FROM games");
+  res.json(result.rows);
+});
+
+// Obtener juego por ID
+app.get("/api/games/:id", async (req, res) => {
+  const result = await pool.query("SELECT * FROM games WHERE id = $1", [req.params.id]);
+  res.json(result.rows[0]);
+});
+
+// ----------------------
+// Endpoints: Generos
+// ----------------------
+// Crear género
+app.post("/api/genres", async (req, res) => {
+  const { name } = req.body;
+  const result = await pool.query(
+    "INSERT INTO genres (name) VALUES ($1) RETURNING *",
+    [name]
+  );
+  res.json(result.rows[0]);
+});
+
+// Listar géneros
+app.get("/api/genres", async (req, res) => {
+  const result = await pool.query("SELECT * FROM genres");
+  res.json(result.rows);
+});
+
+// ----------------------
+// Endpoints: Relacionar Generos a Juegos
+// ----------------------
+// Asignar género a juego
+app.post("/api/game-genres", async (req, res) => {
+  const { game_id, genre_id } = req.body;
+  const result = await pool.query(
+    "INSERT INTO game_genres (game_id, genre_id) VALUES ($1, $2) RETURNING *",
+    [game_id, genre_id]
+  );
+  res.json(result.rows[0]);
+});
+
+// Listar géneros de un juego
+app.get("/api/games/:id/genres", async (req, res) => {
+  const result = await pool.query(
+    `SELECT g.* FROM genres g
+     JOIN game_genres gg ON g.id = gg.genre_id
+     WHERE gg.game_id = $1`,
+    [req.params.id]
+  );
+  res.json(result.rows);
+});
 // ----------------------
 // Endpoint: precios de un juego por Steam App ID
 // ----------------------
@@ -66,7 +145,7 @@ app.get("/api/game/:id", async (req, res) => {
 
     res.json(data.data[steamAppId]);
   } catch (err) {
-    console.error("❌ Error consultando GG.deals:", err);
+    console.error("Error consultando GG.deals:", err);
     res.status(500).json({ error: "Error consultando GG.deals API" });
   }
 });
@@ -94,7 +173,7 @@ app.get("/api/games", async (req, res) => {
 
     res.json(data.data);
   } catch (err) {
-    console.error("❌ Error consultando GG.deals:", err);
+    console.error("Error consultando GG.deals:", err);
     res.status(500).json({ error: "Error consultando GG.deals API" });
   }
 });
@@ -103,12 +182,12 @@ app.get("/api/games", async (req, res) => {
 // Endpoint de prueba
 // ----------------------
 app.get("/", (_req, res) => {
-  res.send("Servidor corriendo en Render 🚀");
+  res.send("Servidor corriendo en Render");
 });
 
 // ----------------------
 // Mantener el proceso vivo
 // ----------------------
 app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en puerto ${PORT}`);
+  console.log(`Servidor escuchando en puerto ${PORT}`);
 });
