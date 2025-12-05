@@ -1,15 +1,21 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import pool from "./db";
-import fetch from "node-fetch"; // instala con: npm install node-fetch
+import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Guarda tu API key en variables de entorno (Render → Settings → Environment)
 const GGDEALS_API_KEY = process.env.GGDEALS_API_KEY;
 
 app.use(express.json());
+
+// Interfaz para tipar la respuesta de búsqueda
+interface GGGame {
+  id: number;
+  title: string;
+  steamAppId?: number;
+  [key: string]: any; // para campos adicionales que devuelva la API
+}
 
 // Endpoint para registrar usuario
 app.post("/api/users/register", async (req, res) => {
@@ -26,15 +32,32 @@ app.post("/api/users/register", async (req, res) => {
   }
 });
 
-// Nuevo endpoint: consultar precios de juegos por Steam App ID
-app.get("/api/game/:id", async (req, res) => {
-  const steamAppId = req.params.id;
+// Nuevo endpoint: buscar juego por nombre y devolver precios
+app.get("/api/game/:title", async (req, res) => {
+  const title = req.params.title;
   try {
-    const response = await fetch(
-      `https://api.gg.deals/v1/game/prices/by-steam-app-id/?key=${GGDEALS_API_KEY}&ids=${steamAppId}`
+    // Paso 1: buscar el juego en GG.deals
+    const searchRes = await fetch(
+      `https://gg.deals/api/game/search/?title=${encodeURIComponent(title)}&key=${GGDEALS_API_KEY}`
     );
-    const data = await response.json();
-    res.json(data);
+    const searchData = (await searchRes.json()) as GGGame[];
+
+    if (!searchData || searchData.length === 0) {
+      return res.status(404).json({ error: "Juego no encontrado" });
+    }
+
+    const gameId = searchData[0].id;
+
+    // Paso 2: obtener precios con el ID interno
+    const priceRes = await fetch(
+      `https://gg.deals/api/game/prices/?id=${gameId}&key=${GGDEALS_API_KEY}`
+    );
+    const priceData = await priceRes.json();
+
+    res.json({
+      game: searchData[0],
+      prices: priceData,
+    });
   } catch (err) {
     res.status(500).json({ error: "Error consultando GG.deals API" });
   }
