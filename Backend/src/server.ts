@@ -13,7 +13,11 @@ const GGDEALS_API_KEY = process.env.GGDEALS_API_KEY;
 
 // 🔑 Configuración CORS
 app.use(cors({
-  origin: "https://gamesaleshub-front.onrender.com", // tu frontend en Render
+  origin: [
+    "https://gamesaleshub-front.onrender.com", // tu frontend en Render
+    "http://localhost:5173", // Vite dev server local
+    "http://localhost:3000", // Si necesitas desde aquí también
+  ],
   credentials: true, // si usas cookies/sesiones
 }));
 
@@ -179,16 +183,29 @@ app.post("/api/login", async (req, res) => {
 // Endpoints: Juegos
 // ----------------------
 
-// Listar juegos
+// Listar juegos de la BD
 app.get("/api/games", async (req, res) => {
-  const result = await pool.query("SELECT * FROM games");
-  res.json(result.rows);
+  try {
+    const result = await pool.query("SELECT * FROM games ORDER BY title ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener juegos:", err);
+    res.status(500).json({ error: "Error al obtener juegos" });
+  }
 });
 
 // Obtener juego por ID
 app.get("/api/games/:id", async (req, res) => {
-  const result = await pool.query("SELECT * FROM games WHERE id = $1", [req.params.id]);
-  res.json(result.rows[0]);
+  try {
+    const result = await pool.query("SELECT * FROM games WHERE id = $1", [req.params.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Juego no encontrado" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error al obtener juego:", err);
+    res.status(500).json({ error: "Error al obtener juego" });
+  }
 });
 
 // ----------------------
@@ -257,10 +274,10 @@ app.get("/api/game/:id", async (req, res) => {
 });
 
 // ----------------------
-// Endpoint: Consulta de juegos a GG deals
-// Ejemplo: /api/games?ids=400,292030,1091500
+// Endpoint: Consulta de juegos a GG deals (para búsquedas específicas)
+// Ejemplo: /api/ggdeals?ids=400,292030,1091500
 // ----------------------
-app.get("/api/games", async (req, res) => {
+app.get("/api/ggdeals", async (req, res) => {
   const ids = req.query.ids as string; // ej: "400,292030,1091500"
   if (!ids) {
     return res.status(400).json({ error: "Debes proporcionar IDs separados por coma" });
