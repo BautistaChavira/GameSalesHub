@@ -13,10 +13,15 @@ const GGDEALS_API_KEY = process.env.GGDEALS_API_KEY;
 app.use(express.json());
 
 (async () => {
-  await initDB(); // ejecuta el script de la BD primero
-  app.listen(PORT, () => {
-    console.log(`Servidor escuchando en puerto ${PORT}`);
-  });
+  try {
+    await initDB(); // ejecuta el script de la BD primero
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor escuchando en puerto ${PORT}`);
+    });
+  } catch (err) {
+    console.error("❌ Error inicializando la BD:", err);
+    process.exit(1); // si falla, termina el proceso
+  }
 })();
 
 // ----------------------
@@ -260,11 +265,4 @@ app.get("/api/search", async (req, res) => {
 // ----------------------
 app.get("/", (_req, res) => {
   res.send("Servidor corriendo en Render");
-});
-
-// ----------------------
-// Mantener el proceso vivo
-// ----------------------
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
 });
