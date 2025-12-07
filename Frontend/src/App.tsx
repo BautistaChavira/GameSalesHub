@@ -2,13 +2,20 @@ import { useState } from "react";
 import "./App.css";
 import Login from "./Login";
 import Usuario from "./Usuario";
+import Offers from "./Offers";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<string>("offers");
+  const [userId, setUserId] = useState<string>("");
 
   const userName = "Alan";
   const userImage = "/userdefault.jpg";
+
+  const handleLogin = (id: string) => {
+    setUserId(id);
+    setIsLoggedIn(true);
+  };
 
   return (
     <div className="app_root">
@@ -36,13 +43,13 @@ function App() {
       </nav>
 
       <main className="app_content">
-        {activeView === "offers" && <h2>Ofertas principales (pendiente)</h2>}
+        {activeView === "offers" && <Offers />}
         {activeView === "foryou" && <h2>Para ti (pendiente)</h2>}
         {activeView === "user" &&
           (!isLoggedIn ? (
-            <Login onLogin={() => setIsLoggedIn(true)} />
+            <Login onLogin={handleLogin} />
           ) : (
-            <Usuario />
+            <Usuario userId={userId} />
           ))}
       </main>
     </div>

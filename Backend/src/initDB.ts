@@ -50,6 +50,13 @@ export async function initDB() {
       saved_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (user_id, game_id)
     );
+
+    CREATE TABLE IF NOT EXISTS user_favorite_genres (
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
+      added_at TIMESTAMPTZ DEFAULT now(),
+      PRIMARY KEY (user_id, genre_id)
+    );
   `);
 
   console.log("✅ Tablas creadas o ya existentes");

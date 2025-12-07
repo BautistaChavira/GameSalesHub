@@ -324,6 +324,154 @@ app.get("/api/search", async (req, res) => {
 });
 
 // ----------------------
+// Endpoints: Juegos favoritos del usuario
+// ----------------------
+// Agregar juego favorito
+app.post("/api/user/:userId/favorite-games", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { gameId } = req.body;
+
+    if (!gameId) {
+      return res.status(400).json({ error: "gameId es requerido" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO user_saved_games (user_id, game_id) 
+       VALUES ($1, $2) 
+       ON CONFLICT (user_id, game_id) DO NOTHING
+       RETURNING *`,
+      [userId, gameId]
+    );
+
+    res.status(201).json({
+      message: "Juego añadido a favoritos",
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Error al agregar juego favorito:", err);
+    res.status(500).json({ error: "Error al agregar juego favorito" });
+  }
+});
+
+// Obtener juegos favoritos del usuario
+app.get("/api/user/:userId/favorite-games", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      `SELECT g.* FROM games g
+       JOIN user_saved_games usg ON g.id = usg.game_id
+       WHERE usg.user_id = $1
+       ORDER BY usg.saved_at DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener juegos favoritos:", err);
+    res.status(500).json({ error: "Error al obtener juegos favoritos" });
+  }
+});
+
+// Eliminar juego favorito
+app.delete("/api/user/:userId/favorite-games/:gameId", async (req, res) => {
+  try {
+    const { userId, gameId } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM user_saved_games 
+       WHERE user_id = $1 AND game_id = $2
+       RETURNING *`,
+      [userId, gameId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Juego no encontrado en favoritos" });
+    }
+
+    res.json({ message: "Juego removido de favoritos" });
+  } catch (err) {
+    console.error("Error al eliminar juego favorito:", err);
+    res.status(500).json({ error: "Error al eliminar juego favorito" });
+  }
+});
+
+// ----------------------
+// Endpoints: Géneros favoritos del usuario
+// ----------------------
+// Agregar género favorito
+app.post("/api/user/:userId/favorite-genres", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { genreId } = req.body;
+
+    if (!genreId) {
+      return res.status(400).json({ error: "genreId es requerido" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO user_favorite_genres (user_id, genre_id) 
+       VALUES ($1, $2) 
+       ON CONFLICT (user_id, genre_id) DO NOTHING
+       RETURNING *`,
+      [userId, genreId]
+    );
+
+    res.status(201).json({
+      message: "Género añadido a favoritos",
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Error al agregar género favorito:", err);
+    res.status(500).json({ error: "Error al agregar género favorito" });
+  }
+});
+
+// Obtener géneros favoritos del usuario
+app.get("/api/user/:userId/favorite-genres", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      `SELECT g.* FROM genres g
+       JOIN user_favorite_genres ufg ON g.id = ufg.genre_id
+       WHERE ufg.user_id = $1
+       ORDER BY ufg.added_at DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener géneros favoritos:", err);
+    res.status(500).json({ error: "Error al obtener géneros favoritos" });
+  }
+});
+
+// Eliminar género favorito
+app.delete("/api/user/:userId/favorite-genres/:genreId", async (req, res) => {
+  try {
+    const { userId, genreId } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM user_favorite_genres 
+       WHERE user_id = $1 AND genre_id = $2
+       RETURNING *`,
+      [userId, genreId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Género no encontrado en favoritos" });
+    }
+
+    res.json({ message: "Género removido de favoritos" });
+  } catch (err) {
+    console.error("Error al eliminar género favorito:", err);
+    res.status(500).json({ error: "Error al eliminar género favorito" });
+  }
+});
+
+// ----------------------
 // Endpoint de prueba
 // ----------------------
 app.get("/", (_req, res) => {

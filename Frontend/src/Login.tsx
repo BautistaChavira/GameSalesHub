@@ -3,7 +3,7 @@ import "./Login.css";
 import { API_URLS, fetchWithTimeout } from "./config";
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (userId: string) => void;
 }
 
 function Login({ onLogin }: LoginProps) {
@@ -17,7 +17,7 @@ function Login({ onLogin }: LoginProps) {
     e.preventDefault();
     try {
       if (mode === "register") {
-        const response = await fetchWithTimeout<{ message: string }>(
+        const response = await fetchWithTimeout<{ message: string; user: { id: string } }>(
           API_URLS.register,
           {
             method: "POST",
@@ -25,8 +25,9 @@ function Login({ onLogin }: LoginProps) {
           }
         );
         console.log("✅ Registro exitoso:", response);
+        onLogin(response.user.id);
       } else {
-        const response = await fetchWithTimeout<{ message: string }>(
+        const response = await fetchWithTimeout<{ message: string; user: { id: string } }>(
           API_URLS.login,
           {
             method: "POST",
@@ -34,8 +35,8 @@ function Login({ onLogin }: LoginProps) {
           }
         );
         console.log("✅ Login exitoso:", response);
+        onLogin(response.user.id);
       }
-      onLogin();
     } catch (err: any) {
       console.error("❌ Error:", err);
       setError(err.message);

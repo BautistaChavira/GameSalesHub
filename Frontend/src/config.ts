@@ -10,9 +10,19 @@ export const API_URLS = {
   // login: `${API_BASE_URL}/auth/login`,
   register: `${API_BASE_URL}/register`,
   login: `${API_BASE_URL}/login`, // 👈 nuevo endpoint
-
+  games: `${API_BASE_URL}/games`, // 👈 obtener juegos
+  search: `${API_BASE_URL}/search`, // 👈 buscar juegos
+  
+  // Dinámicos (se construyen con userId/gameId/genreId)
+  // userFavoriteGames: `/api/user/${userId}/favorite-games`
+  // userFavoriteGenres: `/api/user/${userId}/favorite-genres`
 
 } as const;
+
+// Helper para construir URLs dinámicas
+export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favorite-genres') => {
+  return `${API_BASE_URL}/user/${userId}/${resource}`;
+};
 
 // API request timeout (ms)
 export const API_TIMEOUT = 10000;
