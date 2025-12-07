@@ -60,10 +60,12 @@ function Usuario({ userId }: UsuarioProps) {
 
       setFavoriteGames(games);
       setFavoriteGenres(genres);
-      setMonthlyBudget(budgetData.monthlyBudget);
-      setBudgetInput(budgetData.monthlyBudget.toString());
-      setMonthlySpent(spentData.monthlySpent);
-      setSpentInput(spentData.monthlySpent.toString());
+      const mb = Number(budgetData?.monthlyBudget ?? 0);
+      const ms = Number(spentData?.monthlySpent ?? 0);
+      setMonthlyBudget(Number.isFinite(mb) ? mb : 0);
+      setBudgetInput((Number.isFinite(mb) ? mb : 0).toString());
+      setMonthlySpent(Number.isFinite(ms) ? ms : 0);
+      setSpentInput((Number.isFinite(ms) ? ms : 0).toString());
     } catch (err) {
       console.error("Error cargando favoritos:", err);
     } finally {
@@ -89,7 +91,8 @@ function Usuario({ userId }: UsuarioProps) {
       });
 
       if (response && typeof response === "object" && "monthlySpent" in response) {
-        setMonthlySpent(response.monthlySpent);
+        const ms = Number(response.monthlySpent ?? 0);
+        setMonthlySpent(Number.isFinite(ms) ? ms : 0);
         alert("Gasto guardado exitosamente");
       }
     } catch (err) {
@@ -118,7 +121,8 @@ function Usuario({ userId }: UsuarioProps) {
       });
 
       if (response && typeof response === "object" && "monthlyBudget" in response) {
-        setMonthlyBudget(response.monthlyBudget);
+        const mb = Number(response.monthlyBudget ?? 0);
+        setMonthlyBudget(Number.isFinite(mb) ? mb : 0);
         alert("Presupuesto guardado exitosamente");
       }
     } catch (err) {
