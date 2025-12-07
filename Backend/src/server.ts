@@ -14,13 +14,13 @@ app.use(express.json());
 
 (async () => {
   try {
-    await initDB(); // ejecuta el script de la BD primero
+    await initDB(); // crea tablas
     app.listen(PORT, () => {
       console.log(`🚀 Servidor escuchando en puerto ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Error inicializando la BD:", err);
-    process.exit(1); // si falla, termina el proceso
+    process.exit(1);
   }
 })();
 
