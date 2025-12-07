@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Usuario.css";
-import { API_URLS, fetchWithTimeout, buildUserURL, buildSpentURL } from "./config";
+import { API_URLS, fetchWithTimeout, buildUserURL, buildBudgetURL, buildSpentURL } from "./config";
 
 interface Genre {
   id: number;
@@ -34,6 +34,9 @@ function Usuario({ userId }: UsuarioProps) {
   const [monthlySpent, setMonthlySpent] = useState<number>(0);
   const [spentInput, setSpentInput] = useState<string>("");
   const [savingSpent, setSavingSpent] = useState(false);
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
+  const [budgetInput, setBudgetInput] = useState<string>("");
+  const [savingBudget, setSavingBudget] = useState(false);
 
   // Cargar favoritos al montar el componente
   useEffect(() => {
@@ -45,16 +48,20 @@ function Usuario({ userId }: UsuarioProps) {
       setLoadingFavorites(true);
       const gamesUrl = buildUserURL(userId, "favorite-games");
       const genresUrl = buildUserURL(userId, "favorite-genres");
+      const budgetUrl = buildBudgetURL(userId);
       const spentUrl = buildSpentURL(userId);
 
-      const [games, genres, spentData] = await Promise.all([
+      const [games, genres, budgetData, spentData] = await Promise.all([
         fetchWithTimeout<Game[]>(gamesUrl),
         fetchWithTimeout<Genre[]>(genresUrl),
+        fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl),
         fetchWithTimeout<{ monthlySpent: number }>(spentUrl),
       ]);
 
       setFavoriteGames(games);
       setFavoriteGenres(genres);
+      setMonthlyBudget(budgetData.monthlyBudget);
+      setBudgetInput(budgetData.monthlyBudget.toString());
       setMonthlySpent(spentData.monthlySpent);
       setSpentInput(spentData.monthlySpent.toString());
     } catch (err) {
@@ -90,6 +97,35 @@ function Usuario({ userId }: UsuarioProps) {
       alert("Error al guardar el gasto");
     } finally {
       setSavingSpent(false);
+    }
+  };
+
+  const saveBudget = async () => {
+    try {
+      const budgetAmount = parseFloat(budgetInput);
+      if (isNaN(budgetAmount) || budgetAmount < 0) {
+        alert("Por favor ingresa un monto válido (número >= 0)");
+        return;
+      }
+
+      setSavingBudget(true);
+      const budgetUrl = buildBudgetURL(userId);
+
+      const response = await fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyBudget: budgetAmount }),
+      });
+
+      if (response && typeof response === "object" && "monthlyBudget" in response) {
+        setMonthlyBudget(response.monthlyBudget);
+        alert("Presupuesto guardado exitosamente");
+      }
+    } catch (err) {
+      console.error("Error guardando presupuesto:", err);
+      alert("Error al guardar el presupuesto");
+    } finally {
+      setSavingBudget(false);
     }
   };
 
@@ -192,16 +228,45 @@ function Usuario({ userId }: UsuarioProps) {
 
   return (
     <div className="usuario_root">
-      {/* Sección de gasto mensual */}
+      {/* Sección de presupuesto y gasto */}
       <div className="usuario_budget_section">
-        <h2 className="usuario_title">Lo gastado</h2>
+        <h2 className="usuario_title">Presupuesto vs Gasto</h2>
         {loadingFavorites ? (
-          <p>Cargando gasto...</p>
+          <p>Cargando datos...</p>
         ) : (
           <div className="usuario_budget_form">
+            <div className="usuario_budget_display">
+              <label className="usuario_label">Tu presupuesto:</label>
+              <p className="usuario_budget_amount">${monthlyBudget.toFixed(2)}</p>
+            </div>
+
             <div className="usuario_budget_display usuario_spent_display">
-              <label className="usuario_label">Tu gasto:</label>
+              <label className="usuario_label">Lo gastado:</label>
               <p className="usuario_budget_amount usuario_spent_amount">${monthlySpent.toFixed(2)}</p>
+            </div>
+
+            <div className="usuario_budget_input_group">
+              <label className="usuario_label">Actualizar presupuesto:</label>
+              <div className="usuario_budget_input_wrapper">
+                <span className="usuario_currency_symbol">$</span>
+                <input
+                  type="number"
+                  className="usuario_budget_input"
+                  placeholder="0.00"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  disabled={savingBudget}
+                />
+              </div>
+              <button
+                className="usuario_save_budget_btn usuario_save_budget"
+                onClick={saveBudget}
+                disabled={savingBudget}
+              >
+                {savingBudget ? "Guardando..." : "Guardar presupuesto"}
+              </button>
             </div>
 
             <div className="usuario_budget_input_group">
@@ -220,12 +285,36 @@ function Usuario({ userId }: UsuarioProps) {
                 />
               </div>
               <button
-                className="usuario_save_budget_btn"
+                className="usuario_save_budget_btn usuario_save_spent"
                 onClick={saveSpent}
                 disabled={savingSpent}
               >
                 {savingSpent ? "Guardando..." : "Guardar gasto"}
               </button>
+            </div>
+
+            <div className="usuario_budget_progress">
+              <div className="usuario_progress_item">
+                <label>Presupuesto</label>
+                <div className="usuario_progress_bar_container">
+                  <div 
+                    className="usuario_progress_bar usuario_budget_bar"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+                <p>${monthlyBudget.toFixed(2)}</p>
+              </div>
+
+              <div className="usuario_progress_item">
+                <label>Gasto</label>
+                <div className="usuario_progress_bar_container">
+                  <div 
+                    className={`usuario_progress_bar usuario_spent_bar ${monthlySpent > monthlyBudget ? 'usuario_over' : ''}`}
+                    style={{ width: monthlyBudget > 0 ? `${Math.min((monthlySpent / monthlyBudget) * 100, 100)}%` : "0%" }}
+                  />
+                </div>
+                <p>${monthlySpent.toFixed(2)}</p>
+              </div>
             </div>
           </div>
         )}

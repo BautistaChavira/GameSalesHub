@@ -28,6 +28,11 @@ export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favor
   return `${API_BASE_URL}/user/${userId}/${resource}`;
 };
 
+// Helper para construir URLs de presupuesto
+export const buildBudgetURL = (userId: string) => {
+  return `${API_BASE_URL}/user/${userId}/budget`;
+};
+
 // Helper para construir URLs de gasto
 export const buildSpentURL = (userId: string) => {
   return `${API_BASE_URL}/user/${userId}/spent`;

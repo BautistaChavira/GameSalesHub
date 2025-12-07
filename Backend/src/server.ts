@@ -501,8 +501,62 @@ app.post("/api/personalized-offers", async (req, res) => {
 });
 
 // ----------------------
-// Endpoints: Gasto del usuario
+// Endpoints: Presupuesto y Gasto del usuario
 // ----------------------
+// Obtener presupuesto mensual del usuario
+app.get("/api/user/:userId/budget", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      "SELECT monthly_budget FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ monthlyBudget: result.rows[0].monthly_budget });
+  } catch (err) {
+    console.error("Error al obtener presupuesto:", err);
+    res.status(500).json({ error: "Error al obtener presupuesto" });
+  }
+});
+
+// Actualizar presupuesto mensual del usuario
+app.put("/api/user/:userId/budget", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { monthlyBudget } = req.body;
+
+    if (monthlyBudget === undefined || monthlyBudget === null) {
+      return res.status(400).json({ error: "monthlyBudget es requerido" });
+    }
+
+    if (monthlyBudget < 0) {
+      return res.status(400).json({ error: "El presupuesto no puede ser negativo" });
+    }
+
+    const result = await pool.query(
+      "UPDATE users SET monthly_budget = $1 WHERE id = $2 RETURNING monthly_budget",
+      [monthlyBudget, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({
+      message: "Presupuesto actualizado",
+      monthlyBudget: result.rows[0].monthly_budget,
+    });
+  } catch (err) {
+    console.error("Error al actualizar presupuesto:", err);
+    res.status(500).json({ error: "Error al actualizar presupuesto" });
+  }
+});
+
 // Obtener gasto mensual del usuario
 app.get("/api/user/:userId/spent", async (req, res) => {
   try {
