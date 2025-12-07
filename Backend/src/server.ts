@@ -501,15 +501,15 @@ app.post("/api/personalized-offers", async (req, res) => {
 });
 
 // ----------------------
-// Endpoints: Presupuesto del usuario
+// Endpoints: Gasto del usuario
 // ----------------------
-// Obtener presupuesto mensual del usuario
-app.get("/api/user/:userId/budget", async (req, res) => {
+// Obtener gasto mensual del usuario
+app.get("/api/user/:userId/spent", async (req, res) => {
   try {
     const { userId } = req.params;
 
     const result = await pool.query(
-      "SELECT monthly_budget FROM users WHERE id = $1",
+      "SELECT monthly_spent FROM users WHERE id = $1",
       [userId]
     );
 
@@ -517,30 +517,30 @@ app.get("/api/user/:userId/budget", async (req, res) => {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    res.json({ monthlyBudget: result.rows[0].monthly_budget });
+    res.json({ monthlySpent: result.rows[0].monthly_spent });
   } catch (err) {
-    console.error("Error al obtener presupuesto:", err);
-    res.status(500).json({ error: "Error al obtener presupuesto" });
+    console.error("Error al obtener gasto:", err);
+    res.status(500).json({ error: "Error al obtener gasto" });
   }
 });
 
-// Actualizar presupuesto mensual del usuario
-app.put("/api/user/:userId/budget", async (req, res) => {
+// Actualizar gasto mensual del usuario
+app.put("/api/user/:userId/spent", async (req, res) => {
   try {
     const { userId } = req.params;
-    const { monthlyBudget } = req.body;
+    const { monthlySpent } = req.body;
 
-    if (monthlyBudget === undefined || monthlyBudget === null) {
-      return res.status(400).json({ error: "monthlyBudget es requerido" });
+    if (monthlySpent === undefined || monthlySpent === null) {
+      return res.status(400).json({ error: "monthlySpent es requerido" });
     }
 
-    if (monthlyBudget < 0) {
-      return res.status(400).json({ error: "El presupuesto no puede ser negativo" });
+    if (monthlySpent < 0) {
+      return res.status(400).json({ error: "El gasto no puede ser negativo" });
     }
 
     const result = await pool.query(
-      "UPDATE users SET monthly_budget = $1 WHERE id = $2 RETURNING monthly_budget",
-      [monthlyBudget, userId]
+      "UPDATE users SET monthly_spent = $1 WHERE id = $2 RETURNING monthly_spent",
+      [monthlySpent, userId]
     );
 
     if (result.rows.length === 0) {
@@ -548,12 +548,12 @@ app.put("/api/user/:userId/budget", async (req, res) => {
     }
 
     res.json({
-      message: "Presupuesto actualizado",
-      monthlyBudget: result.rows[0].monthly_budget,
+      message: "Gasto actualizado",
+      monthlySpent: result.rows[0].monthly_spent,
     });
   } catch (err) {
-    console.error("Error al actualizar presupuesto:", err);
-    res.status(500).json({ error: "Error al actualizar presupuesto" });
+    console.error("Error al actualizar gasto:", err);
+    res.status(500).json({ error: "Error al actualizar gasto" });
   }
 });
 

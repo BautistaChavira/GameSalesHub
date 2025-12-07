@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Usuario.css";
-import { API_URLS, fetchWithTimeout, buildUserURL, buildBudgetURL } from "./config";
+import { API_URLS, fetchWithTimeout, buildUserURL, buildSpentURL } from "./config";
 
 interface Genre {
   id: number;
@@ -31,9 +31,9 @@ function Usuario({ userId }: UsuarioProps) {
   const [loadingGames, setLoadingGames] = useState(false);
   const [loadingGenres, setLoadingGenres] = useState(false);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
-  const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
-  const [budgetInput, setBudgetInput] = useState<string>("");
-  const [savingBudget, setSavingBudget] = useState(false);
+  const [monthlySpent, setMonthlySpent] = useState<number>(0);
+  const [spentInput, setSpentInput] = useState<string>("");
+  const [savingSpent, setSavingSpent] = useState(false);
 
   // Cargar favoritos al montar el componente
   useEffect(() => {
@@ -45,18 +45,18 @@ function Usuario({ userId }: UsuarioProps) {
       setLoadingFavorites(true);
       const gamesUrl = buildUserURL(userId, "favorite-games");
       const genresUrl = buildUserURL(userId, "favorite-genres");
-      const budgetUrl = buildBudgetURL(userId);
+      const spentUrl = buildSpentURL(userId);
 
-      const [games, genres, budgetData] = await Promise.all([
+      const [games, genres, spentData] = await Promise.all([
         fetchWithTimeout<Game[]>(gamesUrl),
         fetchWithTimeout<Genre[]>(genresUrl),
-        fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl),
+        fetchWithTimeout<{ monthlySpent: number }>(spentUrl),
       ]);
 
       setFavoriteGames(games);
       setFavoriteGenres(genres);
-      setMonthlyBudget(budgetData.monthlyBudget);
-      setBudgetInput(budgetData.monthlyBudget.toString());
+      setMonthlySpent(spentData.monthlySpent);
+      setSpentInput(spentData.monthlySpent.toString());
     } catch (err) {
       console.error("Error cargando favoritos:", err);
     } finally {
@@ -64,32 +64,32 @@ function Usuario({ userId }: UsuarioProps) {
     }
   };
 
-  const saveBudget = async () => {
+  const saveSpent = async () => {
     try {
-      const budgetAmount = parseFloat(budgetInput);
-      if (isNaN(budgetAmount) || budgetAmount < 0) {
+      const spentAmount = parseFloat(spentInput);
+      if (isNaN(spentAmount) || spentAmount < 0) {
         alert("Por favor ingresa un monto válido (número >= 0)");
         return;
       }
 
-      setSavingBudget(true);
-      const budgetUrl = buildBudgetURL(userId);
+      setSavingSpent(true);
+      const spentUrl = buildSpentURL(userId);
 
-      const response = await fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl, {
+      const response = await fetchWithTimeout<{ monthlySpent: number }>(spentUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyBudget: budgetAmount }),
+        body: JSON.stringify({ monthlySpent: spentAmount }),
       });
 
-      if (response && typeof response === "object" && "monthlyBudget" in response) {
-        setMonthlyBudget(response.monthlyBudget);
-        alert("Presupuesto guardado exitosamente");
+      if (response && typeof response === "object" && "monthlySpent" in response) {
+        setMonthlySpent(response.monthlySpent);
+        alert("Gasto guardado exitosamente");
       }
     } catch (err) {
-      console.error("Error guardando presupuesto:", err);
-      alert("Error al guardar el presupuesto");
+      console.error("Error guardando gasto:", err);
+      alert("Error al guardar el gasto");
     } finally {
-      setSavingBudget(false);
+      setSavingSpent(false);
     }
   };
 
@@ -192,38 +192,39 @@ function Usuario({ userId }: UsuarioProps) {
 
   return (
     <div className="usuario_root">
-      {/* Sección de presupuesto mensual */}
+      {/* Sección de gasto mensual */}
       <div className="usuario_budget_section">
-        <h2 className="usuario_title">Presupuesto mensual</h2>
+        <h2 className="usuario_title">Lo gastado</h2>
         {loadingFavorites ? (
-          <p>Cargando presupuesto...</p>
+          <p>Cargando gasto...</p>
         ) : (
           <div className="usuario_budget_form">
-            <div className="usuario_budget_display">
-              <label className="usuario_label">Presupuesto actual:</label>
-              <p className="usuario_budget_amount">${monthlyBudget.toFixed(2)}</p>
+            <div className="usuario_budget_display usuario_spent_display">
+              <label className="usuario_label">Tu gasto:</label>
+              <p className="usuario_budget_amount usuario_spent_amount">${monthlySpent.toFixed(2)}</p>
             </div>
+
             <div className="usuario_budget_input_group">
-              <label className="usuario_label">Nuevo presupuesto:</label>
+              <label className="usuario_label">Actualizar gasto:</label>
               <div className="usuario_budget_input_wrapper">
                 <span className="usuario_currency_symbol">$</span>
                 <input
                   type="number"
                   className="usuario_budget_input"
                   placeholder="0.00"
-                  value={budgetInput}
-                  onChange={(e) => setBudgetInput(e.target.value)}
+                  value={spentInput}
+                  onChange={(e) => setSpentInput(e.target.value)}
                   min="0"
                   step="0.01"
-                  disabled={savingBudget}
+                  disabled={savingSpent}
                 />
               </div>
               <button
                 className="usuario_save_budget_btn"
-                onClick={saveBudget}
-                disabled={savingBudget}
+                onClick={saveSpent}
+                disabled={savingSpent}
               >
-                {savingBudget ? "Guardando..." : "Guardar presupuesto"}
+                {savingSpent ? "Guardando..." : "Guardar gasto"}
               </button>
             </div>
           </div>
