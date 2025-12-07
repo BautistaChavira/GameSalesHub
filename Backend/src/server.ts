@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import bcrypt from "bcrypt";
 import pool from "./db";
 import fetch from "node-fetch";
@@ -9,6 +10,13 @@ import { initDB } from "./initDB"; // importa tu función
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GGDEALS_API_KEY = process.env.GGDEALS_API_KEY;
+
+// 🔑 Configuración CORS
+app.use(cors({
+  origin: "https://gamesaleshub-front.onrender.com", // tu frontend en Render
+  credentials: true, // si usas cookies/sesiones
+}));
+
 
 app.use(express.json());
 
