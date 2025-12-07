@@ -1,8 +1,9 @@
-import pool from "./db";
+﻿import pool from "./db";
 
 export async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS users (
+  // Create tables one-by-one (safer and easier to debug)
+  const queries = [
+    `CREATE TABLE IF NOT EXISTS users (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email TEXT UNIQUE NOT NULL,
       username TEXT UNIQUE NOT NULL,
@@ -10,9 +11,9 @@ export async function initDB() {
       monthly_budget NUMERIC(10,2) DEFAULT 0,
       monthly_spent NUMERIC(10,2) DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT now()
-    );
+    );`,
 
-    CREATE TABLE IF NOT EXISTS games (
+    `CREATE TABLE IF NOT EXISTS games (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title TEXT NOT NULL,
       on_sale BOOLEAN DEFAULT false,
@@ -33,33 +34,61 @@ export async function initDB() {
       historical_retail NUMERIC(10,2),
 
       CONSTRAINT games_title_unique UNIQUE (title)
-    );
+    );`,
 
-    CREATE TABLE IF NOT EXISTS genres (
+    `CREATE TABLE IF NOT EXISTS genres (
       id SERIAL PRIMARY KEY,
       name TEXT UNIQUE NOT NULL
-    );
+    );`,
 
-    CREATE TABLE IF NOT EXISTS game_genres (
+    `CREATE TABLE IF NOT EXISTS game_genres (
       game_id UUID REFERENCES games(id) ON DELETE CASCADE,
       genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
       PRIMARY KEY (game_id, genre_id)
-    );
+    );`,
 
-    CREATE TABLE IF NOT EXISTS user_saved_games (
+    `CREATE TABLE IF NOT EXISTS user_saved_games (
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
       game_id UUID REFERENCES games(id) ON DELETE CASCADE,
       saved_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (user_id, game_id)
-    );
+    );`,
 
-    CREATE TABLE IF NOT EXISTS user_favorite_genres (
+    `CREATE TABLE IF NOT EXISTS user_favorite_genres (
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
       genre_id INT REFERENCES genres(id) ON DELETE CASCADE,
       added_at TIMESTAMPTZ DEFAULT now(),
       PRIMARY KEY (user_id, genre_id)
+    );`,
+  ];
+
+  for (const q of queries) {
+    try {
+      await pool.query(q);
+    } catch (err) {
+      console.error("Error ejecutando query initDB:", err);
+      // continue to try other queries
+    }
+  }
+
+  // Ensure the new columns exist on existing deployments
+  try {
+    await pool.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_budget NUMERIC(10,2) DEFAULT 0;`
     );
-  `);
+    console.log("✅ Columna monthly_budget verificada/creada");
+  } catch (err) {
+    console.error("Error creando monthly_budget:", err);
+  }
+
+  try {
+    await pool.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_spent NUMERIC(10,2) DEFAULT 0;`
+    );
+    console.log("✅ Columna monthly_spent verificada/creada");
+  } catch (err) {
+    console.error("Error creando monthly_spent:", err);
+  }
 
   console.log("✅ Tablas creadas o ya existentes");
 }
