@@ -25,6 +25,15 @@ export default function YourOffers({ userId }: YourOffersProps) {
     fetchPersonalizedOffers();
   }, [userId]);
 
+  const sortGames = (gamesToSort: Game[]): Game[] => {
+    return [...gamesToSort].sort((a, b) => {
+      if (a.on_sale === b.on_sale) {
+        return a.title.localeCompare(b.title);
+      }
+      return a.on_sale ? -1 : 1;
+    });
+  };
+
   const fetchPersonalizedOffers = async () => {
     try {
       setLoading(true);
@@ -33,7 +42,7 @@ export default function YourOffers({ userId }: YourOffersProps) {
         method: "POST",
         body: JSON.stringify({ userId }),
       });
-      setPersonalizedGames(data);
+      setPersonalizedGames(sortGames(data));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar ofertas personalizadas");
       console.error("Error fetching personalized offers:", err);

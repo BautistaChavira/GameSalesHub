@@ -22,12 +22,21 @@ export default function Offers() {
     fetchGames();
   }, []);
 
+  const sortGames = (gamesToSort: Game[]): Game[] => {
+    return [...gamesToSort].sort((a, b) => {
+      if (a.on_sale === b.on_sale) {
+        return a.title.localeCompare(b.title);
+      }
+      return a.on_sale ? -1 : 1;
+    });
+  };
+
   const fetchGames = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await fetchWithTimeout<Game[]>(API_URLS.games);
-      setGames(data);
+      setGames(sortGames(data));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar juegos");
       console.error("Error fetching games:", err);
