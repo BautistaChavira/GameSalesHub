@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Login.css";
+import { API_URLS, fetchWithTimeout } from "./config";
 
 interface LoginProps {
   onLogin: () => void;
@@ -9,17 +10,29 @@ function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica real de login (API call)
-    console.log("Login:", { email, username, password });
-    onLogin();
+    try {
+      const response = await fetchWithTimeout<{ message: string }>(
+        API_URLS.register,
+        {
+          method: "POST",
+          body: JSON.stringify({ email, username, password }),
+        }
+      );
+      console.log("✅ Registro exitoso:", response);
+      onLogin();
+    } catch (err: any) {
+      console.error("❌ Error en registro:", err);
+      setError(err.message);
+    }
   };
 
   return (
     <div className="login_root">
-      <h2 className="login_title">Iniciar sesión</h2>
+      <h2 className="login_title">Registrarse</h2>
       <form className="login_form" onSubmit={handleSubmit}>
         <label className="login_label">
           Email
@@ -55,9 +68,10 @@ function Login({ onLogin }: LoginProps) {
         </label>
 
         <button type="submit" className="login_btn">
-          Entrar
+          Registrarse
         </button>
       </form>
+      {error && <p className="login_error">{error}</p>}
     </div>
   );
 }

@@ -47,6 +47,8 @@ interface GGDealsResponse {
   };
 }
 
+app.use(express.json()); // para parsear JSON en el body
+
 // ----------------------
 // Cron job: cada 12 horas consulta GG.deals
 // ----------------------
@@ -89,56 +91,42 @@ cron.schedule("0 */12 * * *", async () => {
 });
 
 // ----------------------
-// Endpoint: últimos 100 juegos en oferta
-// ----------------------
-app.get("/api/offers", async (_req, res) => {
-  const result = await pool.query(
-    `SELECT game_title, current_retail, current_keyshops, currency, created_at
-     FROM prices
-     WHERE current_retail IS NOT NULL OR current_keyshops IS NOT NULL
-     ORDER BY created_at DESC
-     LIMIT 100`
-  );
-  res.json(result.rows);
-});
-
-// ----------------------
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en puerto ${PORT}`);
-});
-
-
-// ----------------------
 // Endpoints: Usuarios
 // ----------------------
-// Crear usuario
-app.post("/api/users", async (req, res) => {
-  const { email, username, password_hash } = req.body;
-  const result = await pool.query(
-    "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *",
-    [email, username, password_hash]
-  );
-  res.json(result.rows[0]);
+// Endpoint para registrar usuario
+app.post("/api/register", async (req, res) => {
+  try {
+    const { email, username, password } = req.body;
+
+    if (!email || !username || !password) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
+
+    // Hashear la contraseña
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users (email, username, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING id, email, username, created_at`,
+      [email, username, password_hash]
+    );
+
+    const user = result.rows[0];
+    res.status(201).json({ message: "Usuario registrado", user });
+  } catch (err: any) {
+    console.error("❌ Error al registrar usuario:", err);
+    res.status(500).json({ message: "Error interno del servidor" });
+    if (err.code === "23505") {
+      return res.status(409).json({ message: "Email o username ya registrado" });
+    }
+  }
 });
 
-// Listar usuarios
-app.get("/api/users", async (req, res) => {
-  const result = await pool.query("SELECT * FROM users");
-  res.json(result.rows);
-});
 
 // ----------------------
 // Endpoints: Juegos
 // ----------------------
-// Crear juego
-app.post("/api/games", async (req, res) => {
-  const { title, on_sale } = req.body;
-  const result = await pool.query(
-    "INSERT INTO games (title, on_sale) VALUES ($1, $2) RETURNING *",
-    [title, on_sale]
-  );
-  res.json(result.rows[0]);
-});
 
 // Listar juegos
 app.get("/api/games", async (req, res) => {
@@ -218,7 +206,7 @@ app.get("/api/game/:id", async (req, res) => {
 });
 
 // ----------------------
-// Endpoint: precios de varios juegos por Steam App IDs
+// Endpoint: Consulta de juegos a GG deals
 // Ejemplo: /api/games?ids=400,292030,1091500
 // ----------------------
 app.get("/api/games", async (req, res) => {
@@ -246,7 +234,7 @@ app.get("/api/games", async (req, res) => {
 });
 
 // ----------------------
-// Buscar juegos por título
+// Buscar juegos en BD por título
 // ----------------------
 // Para busqueda en tiempo real con feedback
 app.get("/api/search", async (req, res) => {
