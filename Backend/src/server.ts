@@ -186,7 +186,7 @@ app.post("/api/login", async (req, res) => {
 // Listar juegos de la BD
 app.get("/api/games", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM games ORDER BY title ASC");
+    const result = await pool.query("SELECT * FROM games ORDER BY on_sale DESC, title ASC");
     res.json(result.rows);
   } catch (err) {
     console.error("Error al obtener juegos:", err);
@@ -488,7 +488,7 @@ app.post("/api/personalized-offers", async (req, res) => {
        JOIN game_genres gg ON g.id = gg.game_id
        JOIN user_favorite_genres ufg ON gg.genre_id = ufg.genre_id
        WHERE ufg.user_id = $1
-       ORDER BY g.title ASC
+       ORDER BY g.on_sale DESC, g.title ASC
        LIMIT 20`,
       [userId]
     );
@@ -497,6 +497,63 @@ app.post("/api/personalized-offers", async (req, res) => {
   } catch (err) {
     console.error("Error al obtener ofertas personalizadas:", err);
     res.status(500).json({ error: "Error al obtener ofertas personalizadas" });
+  }
+});
+
+// ----------------------
+// Endpoints: Presupuesto del usuario
+// ----------------------
+// Obtener presupuesto mensual del usuario
+app.get("/api/user/:userId/budget", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      "SELECT monthly_budget FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({ monthlyBudget: result.rows[0].monthly_budget });
+  } catch (err) {
+    console.error("Error al obtener presupuesto:", err);
+    res.status(500).json({ error: "Error al obtener presupuesto" });
+  }
+});
+
+// Actualizar presupuesto mensual del usuario
+app.put("/api/user/:userId/budget", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { monthlyBudget } = req.body;
+
+    if (monthlyBudget === undefined || monthlyBudget === null) {
+      return res.status(400).json({ error: "monthlyBudget es requerido" });
+    }
+
+    if (monthlyBudget < 0) {
+      return res.status(400).json({ error: "El presupuesto no puede ser negativo" });
+    }
+
+    const result = await pool.query(
+      "UPDATE users SET monthly_budget = $1 WHERE id = $2 RETURNING monthly_budget",
+      [monthlyBudget, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    res.json({
+      message: "Presupuesto actualizado",
+      monthlyBudget: result.rows[0].monthly_budget,
+    });
+  } catch (err) {
+    console.error("Error al actualizar presupuesto:", err);
+    res.status(500).json({ error: "Error al actualizar presupuesto" });
   }
 });
 

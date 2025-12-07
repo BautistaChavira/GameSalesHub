@@ -7,6 +7,7 @@ export async function initDB() {
       email TEXT UNIQUE NOT NULL,
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      monthly_budget NUMERIC(10,2) DEFAULT 0,
       created_at TIMESTAMPTZ DEFAULT now()
     );
 

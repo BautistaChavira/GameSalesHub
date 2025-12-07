@@ -24,8 +24,13 @@ export const API_URLS = {
 } as const;
 
 // Helper para construir URLs dinámicas de usuario
-export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favorite-genres' | 'personalized-offers') => {
+export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favorite-genres') => {
   return `${API_BASE_URL}/user/${userId}/${resource}`;
+};
+
+// Helper para construir URLs de presupuesto
+export const buildBudgetURL = (userId: string) => {
+  return `${API_BASE_URL}/user/${userId}/budget`;
 };
 
 // API request timeout (ms)

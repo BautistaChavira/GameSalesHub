@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Usuario.css";
-import { API_URLS, fetchWithTimeout, buildUserURL } from "./config";
+import { API_URLS, fetchWithTimeout, buildUserURL, buildBudgetURL } from "./config";
 
 interface Genre {
   id: number;
@@ -31,6 +31,9 @@ function Usuario({ userId }: UsuarioProps) {
   const [loadingGames, setLoadingGames] = useState(false);
   const [loadingGenres, setLoadingGenres] = useState(false);
   const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
+  const [budgetInput, setBudgetInput] = useState<string>("");
+  const [savingBudget, setSavingBudget] = useState(false);
 
   // Cargar favoritos al montar el componente
   useEffect(() => {
@@ -42,18 +45,51 @@ function Usuario({ userId }: UsuarioProps) {
       setLoadingFavorites(true);
       const gamesUrl = buildUserURL(userId, "favorite-games");
       const genresUrl = buildUserURL(userId, "favorite-genres");
+      const budgetUrl = buildBudgetURL(userId);
 
-      const [games, genres] = await Promise.all([
+      const [games, genres, budgetData] = await Promise.all([
         fetchWithTimeout<Game[]>(gamesUrl),
         fetchWithTimeout<Genre[]>(genresUrl),
+        fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl),
       ]);
 
       setFavoriteGames(games);
       setFavoriteGenres(genres);
+      setMonthlyBudget(budgetData.monthlyBudget);
+      setBudgetInput(budgetData.monthlyBudget.toString());
     } catch (err) {
       console.error("Error cargando favoritos:", err);
     } finally {
       setLoadingFavorites(false);
+    }
+  };
+
+  const saveBudget = async () => {
+    try {
+      const budgetAmount = parseFloat(budgetInput);
+      if (isNaN(budgetAmount) || budgetAmount < 0) {
+        alert("Por favor ingresa un monto válido (número >= 0)");
+        return;
+      }
+
+      setSavingBudget(true);
+      const budgetUrl = buildBudgetURL(userId);
+
+      const response = await fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyBudget: budgetAmount }),
+      });
+
+      if (response && typeof response === "object" && "monthlyBudget" in response) {
+        setMonthlyBudget(response.monthlyBudget);
+        alert("Presupuesto guardado exitosamente");
+      }
+    } catch (err) {
+      console.error("Error guardando presupuesto:", err);
+      alert("Error al guardar el presupuesto");
+    } finally {
+      setSavingBudget(false);
     }
   };
 
@@ -156,6 +192,44 @@ function Usuario({ userId }: UsuarioProps) {
 
   return (
     <div className="usuario_root">
+      {/* Sección de presupuesto mensual */}
+      <div className="usuario_budget_section">
+        <h2 className="usuario_title">Presupuesto mensual</h2>
+        {loadingFavorites ? (
+          <p>Cargando presupuesto...</p>
+        ) : (
+          <div className="usuario_budget_form">
+            <div className="usuario_budget_display">
+              <label className="usuario_label">Presupuesto actual:</label>
+              <p className="usuario_budget_amount">${monthlyBudget.toFixed(2)}</p>
+            </div>
+            <div className="usuario_budget_input_group">
+              <label className="usuario_label">Nuevo presupuesto:</label>
+              <div className="usuario_budget_input_wrapper">
+                <span className="usuario_currency_symbol">$</span>
+                <input
+                  type="number"
+                  className="usuario_budget_input"
+                  placeholder="0.00"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  disabled={savingBudget}
+                />
+              </div>
+              <button
+                className="usuario_save_budget_btn"
+                onClick={saveBudget}
+                disabled={savingBudget}
+              >
+                {savingBudget ? "Guardando..." : "Guardar presupuesto"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Sección de géneros favoritos */}
       <div className="usuario_section">
         <h2 className="usuario_title">Tus géneros favoritos</h2>
