@@ -9,6 +9,8 @@ export const API_URLS = {
   // genres: `${API_BASE_URL}/genres`,
   // login: `${API_BASE_URL}/auth/login`,
   register: `${API_BASE_URL}/register`,
+  login: `${API_BASE_URL}/login`, // 👈 nuevo endpoint
+
 
 } as const;
 

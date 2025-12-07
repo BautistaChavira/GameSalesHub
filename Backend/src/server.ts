@@ -136,6 +136,44 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// Endpoint para login sin JWT
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body; // 👈 usamos username en vez de email si prefieres
+    if (!username || !password) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [username]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: "Usuario no encontrado" });
+    }
+
+    const user = result.rows[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
+
+    // 👇 respuesta sencilla, sin token
+    res.json({
+      message: "Login exitoso",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Error en login:", err);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
 
 // ----------------------
 // Endpoints: Juegos
