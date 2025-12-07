@@ -1,0 +1,107 @@
+.yourOffers_container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.yourOffers_title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.yourOffers_subtitle {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.yourOffers_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.yourOffers_card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.yourOffers_card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(245, 87, 108, 0.3);
+}
+
+.yourOffers_game_title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.yourOffers_prices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.yourOffers_price {
+  margin: 0;
+  opacity: 0.95;
+}
+
+.yourOffers_badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: #ffd700;
+  color: #d63031;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .yourOffers_container {
+    padding: 1rem;
+  }
+
+  .yourOffers_title {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .yourOffers_subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .yourOffers_grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .yourOffers_card {
+    padding: 1rem;
+  }
+
+  .yourOffers_game_title {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+}

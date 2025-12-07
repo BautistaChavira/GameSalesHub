@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_URLS, fetchWithTimeout } from "./config";
+import "./Offers.css";
 
 interface Game {
   id: string;

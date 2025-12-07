@@ -30,6 +30,7 @@ function Usuario({ userId }: UsuarioProps) {
   const [genreSearchResults, setGenreSearchResults] = useState<Genre[]>([]);
   const [loadingGames, setLoadingGames] = useState(false);
   const [loadingGenres, setLoadingGenres] = useState(false);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
 
   // Cargar favoritos al montar el componente
   useEffect(() => {
@@ -38,6 +39,7 @@ function Usuario({ userId }: UsuarioProps) {
 
   const loadFavorites = async () => {
     try {
+      setLoadingFavorites(true);
       const gamesUrl = buildUserURL(userId, "favorite-games");
       const genresUrl = buildUserURL(userId, "favorite-genres");
 
@@ -50,6 +52,8 @@ function Usuario({ userId }: UsuarioProps) {
       setFavoriteGenres(genres);
     } catch (err) {
       console.error("Error cargando favoritos:", err);
+    } finally {
+      setLoadingFavorites(false);
     }
   };
 
@@ -87,9 +91,7 @@ function Usuario({ userId }: UsuarioProps) {
 
     try {
       setLoadingGenres(true);
-      const allGenres = await fetchWithTimeout<Genre[]>(
-        `${API_URLS.games.replace("/games", "")}/genres`
-      );
+      const allGenres = await fetchWithTimeout<Genre[]>(API_URLS.genres);
       const filtered = allGenres.filter((g) =>
         g.name.toLowerCase().includes(query.toLowerCase())
       );
@@ -157,91 +159,114 @@ function Usuario({ userId }: UsuarioProps) {
       {/* Sección de géneros favoritos */}
       <div className="usuario_section">
         <h2 className="usuario_title">Tus géneros favoritos</h2>
-        <div className="usuario_form">
-          <input
-            type="text"
-            className="usuario_input"
-            placeholder="Buscar género..."
-            value={genreSearchQuery}
-            onChange={handleGenreSearch}
-          />
-        </div>
-        {genreSearchResults.length > 0 && (
-          <ul className="usuario_search_results">
-            {genreSearchResults.map((genre) => (
-              <li key={genre.id} className="usuario_search_item">
-                <span>{genre.name}</span>
-                {!favoriteGenres.find((g) => g.id === genre.id) && (
-                  <button
-                    className="usuario_add_btn"
-                    onClick={() => addFavoriteGenre(genre)}
-                  >
-                    +
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+        
+        {loadingFavorites ? (
+          <p>Cargando géneros...</p>
+        ) : (
+          <>
+            <div className="usuario_form">
+              <input
+                type="text"
+                className="usuario_input"
+                placeholder="Buscar género..."
+                value={genreSearchQuery}
+                onChange={handleGenreSearch}
+              />
+            </div>
+            {loadingGenres && <p>Buscando...</p>}
+            {genreSearchResults.length > 0 && (
+              <ul className="usuario_search_results">
+                {genreSearchResults.map((genre) => (
+                  <li key={genre.id} className="usuario_search_item">
+                    <span>{genre.name}</span>
+                    {!favoriteGenres.find((g) => g.id === genre.id) && (
+                      <button
+                        className="usuario_add_btn"
+                        onClick={() => addFavoriteGenre(genre)}
+                      >
+                        +
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {favoriteGenres.length === 0 ? (
+              <p className="usuario_empty">No tienes géneros favoritos. ¡Añade algunos!</p>
+            ) : (
+              <ul className="usuario_list">
+                {favoriteGenres.map((genre) => (
+                  <li key={genre.id} className="usuario_item">
+                    <span>{genre.name}</span>
+                    <button
+                      className="usuario_remove_btn"
+                      onClick={() => removeFavoriteGenre(genre.id)}
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
-        <ul className="usuario_list">
-          {favoriteGenres.map((genre) => (
-            <li key={genre.id} className="usuario_item">
-              <span>{genre.name}</span>
-              <button
-                className="usuario_remove_btn"
-                onClick={() => removeFavoriteGenre(genre.id)}
-              >
-                ✕
-              </button>
-            </li>
-          ))}
-        </ul>
       </div>
 
       {/* Sección de juegos favoritos */}
       <div className="usuario_section">
         <h2 className="usuario_title">Tus juegos favoritos</h2>
-        <div className="usuario_form">
-          <input
-            type="text"
-            className="usuario_input"
-            placeholder="Buscar juego..."
-            value={gameSearchQuery}
-            onChange={handleGameSearch}
-          />
-        </div>
-        {loadingGames && <p>Buscando...</p>}
-        {gameSearchResults.length > 0 && (
-          <ul className="usuario_search_results">
-            {gameSearchResults.map((game) => (
-              <li key={game.id} className="usuario_search_item">
-                <span>{game.title}</span>
-                {!favoriteGames.find((g) => g.id === game.id) && (
-                  <button
-                    className="usuario_add_btn"
-                    onClick={() => addFavoriteGame(game)}
-                  >
-                    +
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="usuario_games_list">
-          {favoriteGames.map((game) => (
-            <div key={game.id} className="usuario_game_card">
-              <h4>{game.title}</h4>
-              {game.on_sale && <span className="usuario_sale_badge">En oferta</span>}
-              <button
-                className="usuario_remove_btn"
-                onClick={() => removeFavoriteGame(game.id)}
-              >
-                Eliminar
-              </button>
+        
+        {loadingFavorites ? (
+          <p>Cargando juegos...</p>
+        ) : (
+          <>
+            <div className="usuario_form">
+              <input
+                type="text"
+                className="usuario_input"
+                placeholder="Buscar juego..."
+                value={gameSearchQuery}
+                onChange={handleGameSearch}
+              />
             </div>
-          ))}
-        </div>
+            {loadingGames && <p>Buscando...</p>}
+            {gameSearchResults.length > 0 && (
+              <ul className="usuario_search_results">
+                {gameSearchResults.map((game) => (
+                  <li key={game.id} className="usuario_search_item">
+                    <span>{game.title}</span>
+                    {!favoriteGames.find((g) => g.id === game.id) && (
+                      <button
+                        className="usuario_add_btn"
+                        onClick={() => addFavoriteGame(game)}
+                      >
+                        +
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {favoriteGames.length === 0 ? (
+              <p className="usuario_empty">No tienes juegos favoritos. ¡Añade algunos!</p>
+            ) : (
+              <div className="usuario_games_list">
+                {favoriteGames.map((game) => (
+                  <div key={game.id} className="usuario_game_card">
+                    <h4>{game.title}</h4>
+                    {game.on_sale && <span className="usuario_sale_badge">En oferta</span>}
+                    <button
+                      className="usuario_remove_btn"
+                      onClick={() => removeFavoriteGame(game.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

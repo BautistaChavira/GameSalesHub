@@ -472,6 +472,35 @@ app.delete("/api/user/:userId/favorite-genres/:genreId", async (req, res) => {
 });
 
 // ----------------------
+// Endpoints: Ofertas personalizadas
+// ----------------------
+// Obtener ofertas personalizadas basadas en géneros favoritos del usuario
+app.post("/api/personalized-offers", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId es requerido" });
+    }
+
+    const result = await pool.query(
+      `SELECT DISTINCT g.* FROM games g
+       JOIN game_genres gg ON g.id = gg.game_id
+       JOIN user_favorite_genres ufg ON gg.genre_id = ufg.genre_id
+       WHERE ufg.user_id = $1
+       ORDER BY g.title ASC
+       LIMIT 20`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error al obtener ofertas personalizadas:", err);
+    res.status(500).json({ error: "Error al obtener ofertas personalizadas" });
+  }
+});
+
+// ----------------------
 // Endpoint de prueba
 // ----------------------
 app.get("/", (_req, res) => {

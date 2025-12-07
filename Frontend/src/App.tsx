@@ -3,6 +3,7 @@ import "./App.css";
 import Login from "./Login";
 import Usuario from "./Usuario";
 import Offers from "./Offers";
+import YourOffers from "./YourOffers";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -44,7 +45,13 @@ function App() {
 
       <main className="app_content">
         {activeView === "offers" && <Offers />}
-        {activeView === "foryou" && <h2>Para ti (pendiente)</h2>}
+        {activeView === "foryou" && (
+          isLoggedIn ? (
+            <YourOffers userId={userId} />
+          ) : (
+            <p>Inicia sesión para ver ofertas personalizadas</p>
+          )
+        )}
         {activeView === "user" &&
           (!isLoggedIn ? (
             <Login onLogin={handleLogin} />

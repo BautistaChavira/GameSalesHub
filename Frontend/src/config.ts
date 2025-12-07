@@ -3,24 +3,28 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api"; // ⚠️ cambia según tu backend
 
 export const API_URLS = {
-  // Aquí irás agregando tus endpoints
-  // Ejemplo:
-  // games: `${API_BASE_URL}/games`,
-  // genres: `${API_BASE_URL}/genres`,
-  // login: `${API_BASE_URL}/auth/login`,
+  // Auth
   register: `${API_BASE_URL}/register`,
-  login: `${API_BASE_URL}/login`, // 👈 nuevo endpoint
-  games: `${API_BASE_URL}/games`, // 👈 obtener juegos
-  search: `${API_BASE_URL}/search`, // 👈 buscar juegos
+  login: `${API_BASE_URL}/login`,
   
-  // Dinámicos (se construyen con userId/gameId/genreId)
-  // userFavoriteGames: `/api/user/${userId}/favorite-games`
-  // userFavoriteGenres: `/api/user/${userId}/favorite-genres`
+  // Games
+  games: `${API_BASE_URL}/games`, // obtener todos los juegos
+  search: `${API_BASE_URL}/search`, // buscar juegos por título
+  
+  // Genres
+  genres: `${API_BASE_URL}/genres`, // obtener todos los géneros
+  
+  // Offers
+  personalizedOffers: `${API_BASE_URL}/personalized-offers`, // ofertas basadas en géneros favoritos
+  
+  // Dinámicos (se construyen con buildUserURL):
+  // - /api/user/:userId/favorite-games (GET, POST, DELETE)
+  // - /api/user/:userId/favorite-genres (GET, POST, DELETE)
 
 } as const;
 
-// Helper para construir URLs dinámicas
-export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favorite-genres') => {
+// Helper para construir URLs dinámicas de usuario
+export const buildUserURL = (userId: string, resource: 'favorite-games' | 'favorite-genres' | 'personalized-offers') => {
   return `${API_BASE_URL}/user/${userId}/${resource}`;
 };
 
