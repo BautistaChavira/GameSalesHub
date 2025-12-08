@@ -36,8 +36,11 @@ export default function GameAIRecommender({ games }: GameAIRecommenderProps) {
       );
       if (response && response.recommendation) {
         setRecommendation(response.recommendation);
+      } else {
+        setError("Respuesta inesperada de la IA");
       }
     } catch (err: any) {
+      console.error("AI Recommender Error:", err);
       setError(err.message || "Error consultando la IA");
     } finally {
       setLoading(false);

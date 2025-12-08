@@ -13,13 +13,14 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<string>("offers");
   const [userId, setUserId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
   const [personalizedGames, setPersonalizedGames] = useState<any[]>([]);
 
-  const userName = "Alan";
   const userImage = "/userdefault.jpg";
 
-  const handleLogin = (id: string) => {
+  const handleLogin = (id: string, username: string) => {
     setUserId(id);
+    setUserName(username);
     setIsLoggedIn(true);
   };
 
@@ -82,7 +83,7 @@ function App() {
           (!isLoggedIn ? (
             <Login onLogin={handleLogin} />
           ) : (
-            <Usuario userId={userId} />
+            <Usuario userId={userId} username={userName} />
           ))}
       </main>
     </div>

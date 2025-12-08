@@ -19,9 +19,10 @@ interface Game {
 
 interface UsuarioProps {
   userId: string;
+  username: string;
 }
 
-function Usuario({ userId }: UsuarioProps) {
+function Usuario({ userId, username }: UsuarioProps) {
   const [favoriteGames, setFavoriteGames] = useState<Game[]>([]);
   const [favoriteGenres, setFavoriteGenres] = useState<Genre[]>([]);
   const [gameSearchQuery, setGameSearchQuery] = useState("");
@@ -274,6 +275,10 @@ function Usuario({ userId }: UsuarioProps) {
 
   return (
     <div className="usuario_root">
+      {/* Encabezado con nombre de usuario */}
+      <div className="usuario_header">
+        <h1 className="usuario_welcome">Bienvenido, {username || "Usuario"}!</h1>
+      </div>
       {/* Sección de presupuesto y gasto */}
       <div className="usuario_budget_section">
         <h2 className="usuario_title">Presupuesto vs Gasto</h2>
