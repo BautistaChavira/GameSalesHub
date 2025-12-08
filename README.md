@@ -372,7 +372,8 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 
 
 ### Perfil y presupuesto
-<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/0770d477-404f-4bc0-9778-3356ec03cd48" />
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/ae79f901-0b39-4c88-82b4-187a75bde4ad" />
+
 
 
 ### Recomendaciones con IA
@@ -398,6 +399,7 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 [⭐ Dale una estrella si te gusta el proyecto!](https://github.com/tuusuario/GameSalesHub)
 
 </div>
+
 
 
 
