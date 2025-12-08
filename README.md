@@ -239,7 +239,7 @@ Si quieres que se ejecute automáticamente cada día:
 2. Cambia `ENABLE_STEAM_CRON=0` a `ENABLE_STEAM_CRON=1`
 3. Redeploy
 
-⚠️ **Nota**: El servidor en Render está en Estados Unidos, por lo que los precios serán en USD.
+⚠️ **Nota**: El servidor en Render está en Estados Unidos, por lo que los precios serán en USD. Si quieres tener precios en tu moneda local haz la recopilación desde tu país
 
 ### Variables de entorno
 
@@ -351,9 +351,7 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 
 ¿Preguntas o problemas? 
 
-- 📧 Email: soporte@gamesaleshub.com
-- 🐛 Issues: [GitHub Issues](https://github.com/tuusuario/GameSalesHub/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/tuusuario/GameSalesHub/discussions)
+- 📧 Email: alan.bautista5391@alumnos.udg.mx
 
 ---
 
@@ -400,6 +398,7 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 [⭐ Dale una estrella si te gusta el proyecto!](https://github.com/tuusuario/GameSalesHub)
 
 </div>
+
 
 
 
