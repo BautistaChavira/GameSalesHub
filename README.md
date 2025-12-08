@@ -370,13 +370,16 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 ## 📸 Screenshots
 
 ### Página principal de ofertas
-![Ofertas](./public/screenshots/ofertas.png)
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/7aa0fc5c-bcc2-4e26-a9c7-13e36b432df3" />
+
 
 ### Perfil y presupuesto
-![Usuario](./public/screenshots/usuario.png)
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/0770d477-404f-4bc0-9778-3356ec03cd48" />
+
 
 ### Recomendaciones con IA
-![IA](./public/screenshots/ai-recommender.png)
+<img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/e9b4f5ec-c748-4106-8780-2d44c7bdaa99" />
+
 
 ---
 
@@ -397,4 +400,5 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 [⭐ Dale una estrella si te gusta el proyecto!](https://github.com/tuusuario/GameSalesHub)
 
 </div>
+
 
