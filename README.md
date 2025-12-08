@@ -16,7 +16,8 @@ Una aplicación moderna que te ayuda a encontrar las mejores ofertas de juegos e
 - **Catálogo completo** de juegos con precios en tiempo real
 - **Búsqueda y filtrado** por título y precio
 - **Ordenamiento inteligente** (precio más bajo/alto)
-- Datos agregados de múltiples plataformas (Steam, Epic Games, PlayStation, Xbox)
+- Datos agregados de múltiples plataformas
+(De momento solo funciona con Steam pero se podría expandir a más plataformas con el permiso de dichas marcas y la exposición de sus apis o para hacer scrapping de forma adecuada)
 
 ### 👤 Gestión de Perfil
 - **Sistema de autenticación** seguro con contraseñas hasheadas (bcrypt)
@@ -396,3 +397,4 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 [⭐ Dale una estrella si te gusta el proyecto!](https://github.com/tuusuario/GameSalesHub)
 
 </div>
+
