@@ -643,8 +643,8 @@ app.post("/api/ai-recommend", async (req, res) => {
     const gameTitlesStr = gamesTitles.join(", ");
     const prompt = `Recomiéndame 3 juegos similares a estos: ${gameTitlesStr}. Solo dame los nombres, separados por coma.`;
 
-    // Intentar con GPT2 (más estable que bloomz-560m)
-    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+    // Usar router.huggingface.co (nuevo endpoint)
+    const response = await fetch("https://router.huggingface.co/openai-community/gpt2", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -656,17 +656,29 @@ app.post("/api/ai-recommend", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Error HF (status ${response.status}):`, errorText);
-      return res.status(500).json({ error: `Error en la API de Hugging Face: ${response.status}` });
+      return res.status(500).json({ error: `Error en la API de Hugging Face: ${response.status} - ${errorText}` });
     }
 
-    const data = await response.json() as any;
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (parseErr) {
+      console.error("Error parsing HF response:", parseErr);
+      return res.status(500).json({ error: "Error al parsear respuesta de Hugging Face" });
+    }
+
     let text = "";
-    if (Array.isArray(data) && data[0]?.generated_text) {
+    if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
       text = data[0].generated_text;
-    } else if (typeof data === "object" && data.generated_text) {
+    } else if (typeof data === "object" && data?.generated_text) {
       text = data.generated_text;
     } else {
+      console.warn("Unexpected HF response format:", data);
       text = JSON.stringify(data);
+    }
+
+    if (!text) {
+      return res.status(500).json({ error: "No se obtuvo respuesta de la IA" });
     }
 
     res.json({ recommendation: text });
