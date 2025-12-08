@@ -6,6 +6,7 @@ import fetch from "node-fetch";
 import cron from "node-cron";
 
 import { initDB } from "./initDB"; // importa tu función
+import { updateSteamTopGames } from "./steam"; // importa el script de Steam
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -104,6 +105,19 @@ cron.schedule("0 */12 * * *", async () => {
     }
   } catch (err) {
     console.error("❌ Error en cron GG.deals:", err);
+  }
+});
+
+// ----------------------
+// Cron job: cada 24 horas actualiza juegos populares de Steam
+// ----------------------
+cron.schedule("0 0 * * *", async () => {
+  console.log("⏰ Ejecutando cron para actualizar juegos de Steam...");
+  try {
+    await updateSteamTopGames(500); // Actualiza los top 500 juegos
+    console.log("✅ Juegos de Steam actualizados exitosamente");
+  } catch (err) {
+    console.error("❌ Error en cron Steam:", err);
   }
 });
 
@@ -608,6 +622,56 @@ app.put("/api/user/:userId/spent", async (req, res) => {
   } catch (err) {
     console.error("Error al actualizar gasto:", err);
     res.status(500).json({ error: "Error al actualizar gasto" });
+  }
+});
+
+// ----------------------
+// Endpoint: Recomendaciones IA (Hugging Face)
+// ----------------------
+app.post("/api/ai-recommend", async (req, res) => {
+  try {
+    const { gamesTitles } = req.body;
+    if (!gamesTitles || !Array.isArray(gamesTitles) || gamesTitles.length === 0) {
+      return res.status(400).json({ error: "Se requiere un arreglo de títulos de juegos" });
+    }
+
+    const hfToken = process.env.HF_API_KEY;
+    if (!hfToken) {
+      return res.status(500).json({ error: "Token de Hugging Face no configurado" });
+    }
+
+    const gameTitlesStr = gamesTitles.join(", ");
+    const prompt = `Recomiéndame 3 juegos similares a estos: ${gameTitlesStr}. Solo dame los nombres, separados por coma.`;
+
+    const response = await fetch("https://api-inference.huggingface.co/models/bigscience/bloomz-560m", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${hfToken}`
+      },
+      body: JSON.stringify({ inputs: prompt })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("Error HF:", error);
+      return res.status(response.status).json({ error: "Error en la API de Hugging Face" });
+    }
+
+    const data = await response.json() as any;
+    let text = "";
+    if (Array.isArray(data) && data[0]?.generated_text) {
+      text = data[0].generated_text;
+    } else if (typeof data === "object" && data.generated_text) {
+      text = data.generated_text;
+    } else {
+      text = JSON.stringify(data);
+    }
+
+    res.json({ recommendation: text });
+  } catch (err) {
+    console.error("Error en /api/ai-recommend:", err);
+    res.status(500).json({ error: "Error procesando recomendaciones IA" });
   }
 });
 

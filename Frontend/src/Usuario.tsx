@@ -73,61 +73,103 @@ function Usuario({ userId }: UsuarioProps) {
     }
   };
 
-  const saveSpent = async () => {
+  const addSpent = async () => {
     try {
       const spentAmount = parseFloat(spentInput);
       if (isNaN(spentAmount) || spentAmount < 0) {
         alert("Por favor ingresa un monto válido (número >= 0)");
         return;
       }
-
       setSavingSpent(true);
       const spentUrl = buildSpentURL(userId);
-
+      const newSpent = monthlySpent + spentAmount;
       const response = await fetchWithTimeout<{ monthlySpent: number }>(spentUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlySpent: spentAmount }),
+        body: JSON.stringify({ monthlySpent: newSpent }),
       });
-
       if (response && typeof response === "object" && "monthlySpent" in response) {
         const ms = Number(response.monthlySpent ?? 0);
         setMonthlySpent(Number.isFinite(ms) ? ms : 0);
-        alert("Gasto guardado exitosamente");
+        setSpentInput("");
+        alert("Gasto añadido exitosamente");
       }
     } catch (err) {
-      console.error("Error guardando gasto:", err);
-      alert("Error al guardar el gasto");
+      console.error("Error añadiendo gasto:", err);
+      alert("Error al añadir el gasto");
     } finally {
       setSavingSpent(false);
     }
   };
 
-  const saveBudget = async () => {
+  const resetSpent = async () => {
+    try {
+      setSavingSpent(true);
+      const spentUrl = buildSpentURL(userId);
+      const response = await fetchWithTimeout<{ monthlySpent: number }>(spentUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlySpent: 0 }),
+      });
+      if (response && typeof response === "object" && "monthlySpent" in response) {
+        setMonthlySpent(0);
+        setSpentInput("");
+        alert("Gasto reiniciado a cero");
+      }
+    } catch (err) {
+      console.error("Error reiniciando gasto:", err);
+      alert("Error al reiniciar el gasto");
+    } finally {
+      setSavingSpent(false);
+    }
+  };
+
+  const addBudget = async () => {
     try {
       const budgetAmount = parseFloat(budgetInput);
       if (isNaN(budgetAmount) || budgetAmount < 0) {
         alert("Por favor ingresa un monto válido (número >= 0)");
         return;
       }
-
       setSavingBudget(true);
       const budgetUrl = buildBudgetURL(userId);
-
+      const newBudget = monthlyBudget + budgetAmount;
       const response = await fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyBudget: budgetAmount }),
+        body: JSON.stringify({ monthlyBudget: newBudget }),
       });
-
       if (response && typeof response === "object" && "monthlyBudget" in response) {
         const mb = Number(response.monthlyBudget ?? 0);
         setMonthlyBudget(Number.isFinite(mb) ? mb : 0);
-        alert("Presupuesto guardado exitosamente");
+        setBudgetInput("");
+        alert("Presupuesto añadido exitosamente");
       }
     } catch (err) {
-      console.error("Error guardando presupuesto:", err);
-      alert("Error al guardar el presupuesto");
+      console.error("Error añadiendo presupuesto:", err);
+      alert("Error al añadir el presupuesto");
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
+  const resetBudget = async () => {
+    try {
+      setSavingBudget(true);
+      const budgetUrl = buildBudgetURL(userId);
+      const response = await fetchWithTimeout<{ monthlyBudget: number }>(budgetUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyBudget: 0 }),
+      });
+      if (response && typeof response === "object" && "monthlyBudget" in response) {
+        setMonthlyBudget(0);
+        setBudgetInput("");
+        alert("Presupuesto reiniciado a cero");
+      }
+    } catch (err) {
+      console.error("Error reiniciando presupuesto:", err);
+      alert("Error al reiniciar el presupuesto");
     } finally {
       setSavingBudget(false);
     }
@@ -242,15 +284,17 @@ function Usuario({ userId }: UsuarioProps) {
             <div className="usuario_budget_display">
               <label className="usuario_label">Tu presupuesto:</label>
               <p className="usuario_budget_amount">${monthlyBudget.toFixed(2)}</p>
+              <button className="usuario_reset_btn" onClick={resetBudget} disabled={savingBudget}>Reiniciar</button>
             </div>
 
             <div className="usuario_budget_display usuario_spent_display">
               <label className="usuario_label">Lo gastado:</label>
               <p className="usuario_budget_amount usuario_spent_amount">${monthlySpent.toFixed(2)}</p>
+              <button className="usuario_reset_btn" onClick={resetSpent} disabled={savingSpent}>Reiniciar</button>
             </div>
 
             <div className="usuario_budget_input_group">
-              <label className="usuario_label">Actualizar presupuesto:</label>
+              <label className="usuario_label">Añadir al presupuesto:</label>
               <div className="usuario_budget_input_wrapper">
                 <span className="usuario_currency_symbol">$</span>
                 <input
@@ -266,15 +310,15 @@ function Usuario({ userId }: UsuarioProps) {
               </div>
               <button
                 className="usuario_save_budget_btn usuario_save_budget"
-                onClick={saveBudget}
+                onClick={addBudget}
                 disabled={savingBudget}
               >
-                {savingBudget ? "Guardando..." : "Guardar presupuesto"}
+                {savingBudget ? "Añadiendo..." : "Añadir al presupuesto"}
               </button>
             </div>
 
             <div className="usuario_budget_input_group">
-              <label className="usuario_label">Actualizar gasto:</label>
+              <label className="usuario_label">Añadir al gasto:</label>
               <div className="usuario_budget_input_wrapper">
                 <span className="usuario_currency_symbol">$</span>
                 <input
@@ -290,10 +334,10 @@ function Usuario({ userId }: UsuarioProps) {
               </div>
               <button
                 className="usuario_save_budget_btn usuario_save_spent"
-                onClick={saveSpent}
+                onClick={addSpent}
                 disabled={savingSpent}
               >
-                {savingSpent ? "Guardando..." : "Guardar gasto"}
+                {savingSpent ? "Añadiendo..." : "Añadir al gasto"}
               </button>
             </div>
 

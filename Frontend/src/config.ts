@@ -3,6 +3,8 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3000/api"; // ⚠️ cambia según tu backend
 
 export const API_URLS = {
+  baseURL: API_BASE_URL.replace('/api', ''), // URL sin /api para endpoints custom
+  
   // Auth
   register: `${API_BASE_URL}/register`,
   login: `${API_BASE_URL}/login`,
