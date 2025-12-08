@@ -643,7 +643,8 @@ app.post("/api/ai-recommend", async (req, res) => {
     const gameTitlesStr = gamesTitles.join(", ");
     const prompt = `Recomiéndame 3 juegos similares a estos: ${gameTitlesStr}. Solo dame los nombres, separados por coma.`;
 
-    const response = await fetch("https://api-inference.huggingface.co/models/bigscience/bloomz-560m", {
+    // Intentar con GPT2 (más estable que bloomz-560m)
+    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -653,9 +654,9 @@ app.post("/api/ai-recommend", async (req, res) => {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error("Error HF:", error);
-      return res.status(response.status).json({ error: "Error en la API de Hugging Face" });
+      const errorText = await response.text();
+      console.error(`Error HF (status ${response.status}):`, errorText);
+      return res.status(500).json({ error: `Error en la API de Hugging Face: ${response.status}` });
     }
 
     const data = await response.json() as any;
