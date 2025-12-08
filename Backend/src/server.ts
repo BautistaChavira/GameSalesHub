@@ -643,8 +643,8 @@ app.post("/api/ai-recommend", async (req, res) => {
     const gameTitlesStr = gamesTitles.join(", ");
     const prompt = `Recomiéndame 3 juegos similares a estos: ${gameTitlesStr}. Solo dame los nombres, separados por coma.`;
 
-    // Usar router.huggingface.co (nuevo endpoint)
-    const response = await fetch("https://router.huggingface.co/openai-community/gpt2", {
+    // Usar el nuevo endpoint de HF con router
+    const response = await fetch("https://router.huggingface.co/models/gpt2", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
