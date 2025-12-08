@@ -643,20 +643,72 @@ app.post("/api/ai-recommend", async (req, res) => {
     const gameTitlesStr = gamesTitles.join(", ");
     const prompt = `Recomiéndame 3 juegos similares a estos: ${gameTitlesStr}. Solo dame los nombres, separados por coma.`;
 
-    // Usar el nuevo endpoint de HF con router
-    const response = await fetch("https://router.huggingface.co/models/gpt2", {
+    // Usar el endpoint OpenAI-compatible de HF router
+    const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${hfToken}`
       },
-      body: JSON.stringify({ inputs: prompt })
+      body: JSON.stringify({
+        model: "deepseek-ai/DeepSeek-V3.2:novita",
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
+      })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Error HF (status ${response.status}):`, errorText);
-      return res.status(500).json({ error: `Error en la API de Hugging Face: ${response.status} - ${errorText}` });
+      
+      // Si recibemos error, intentar usar un modelo más simple
+      if (response.status === 404) {
+        console.log("Modelo no encontrado, intentando con distilgpt2...");
+        const retryResponse = await fetch("https://api-inference.huggingface.co/models/distilgpt2", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${hfToken}`
+          },
+          body: JSON.stringify({ inputs: prompt })
+        });
+        
+        if (!retryResponse.ok) {
+          const retryError = await retryResponse.text();
+          console.error(`Error HF retry (status ${retryResponse.status}):`, retryError);
+          return res.status(500).json({ error: `Error en la API de Hugging Face: ${retryResponse.status}` });
+        }
+        
+        let retryData: any;
+        try {
+          retryData = await retryResponse.json();
+        } catch (parseErr) {
+          console.error("Error parsing HF response:", parseErr);
+          return res.status(500).json({ error: "Error al parsear respuesta de Hugging Face" });
+        }
+
+        let text = "";
+        if (Array.isArray(retryData) && retryData.length > 0 && retryData[0]?.generated_text) {
+          text = retryData[0].generated_text;
+        } else if (typeof retryData === "object" && retryData?.generated_text) {
+          text = retryData.generated_text;
+        } else {
+          console.warn("Unexpected HF response format:", retryData);
+          text = JSON.stringify(retryData);
+        }
+
+        if (!text) {
+          return res.status(500).json({ error: "No se obtuvo respuesta de la IA" });
+        }
+
+        return res.json({ recommendation: text });
+      }
+      
+      return res.status(500).json({ error: `Error en la API de Hugging Face: ${response.status}` });
     }
 
     let data: any;
@@ -668,10 +720,8 @@ app.post("/api/ai-recommend", async (req, res) => {
     }
 
     let text = "";
-    if (Array.isArray(data) && data.length > 0 && data[0]?.generated_text) {
-      text = data[0].generated_text;
-    } else if (typeof data === "object" && data?.generated_text) {
-      text = data.generated_text;
+    if (data?.choices?.[0]?.message?.content) {
+      text = data.choices[0].message.content;
     } else {
       console.warn("Unexpected HF response format:", data);
       text = JSON.stringify(data);
