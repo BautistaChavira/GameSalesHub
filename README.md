@@ -385,8 +385,8 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 
 ## 🎯 Estadísticas
 
-- **+500 juegos** en la base de datos
-- **4 plataformas** integradas
+- **+50** en la base de datos (la api de steamspy no soporta cantidades tan grandes juegos pero se puede optar por formas alternativas de recibir los datos)
+- **4 plataformas** integradas (no tenemos los datos de los juegos para todas las plataformas pero el sistema ya esta listo para recibirlas)
 - **100% TypeScript** en frontend y backend
 - **API responses en <100ms**
 - **99.9% uptime** en producción
@@ -400,5 +400,6 @@ Este proyecto está bajo la Licencia MIT. Ver archivo `LICENSE` para más detall
 [⭐ Dale una estrella si te gusta el proyecto!](https://github.com/tuusuario/GameSalesHub)
 
 </div>
+
 
 
